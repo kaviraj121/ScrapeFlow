@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     }
   
     try {
-      const cron = (parser as any).parseExpression(workflow.cron!, { utc: true });
+      const cron = parser.parseExpression(workflow.cron!, { utc: true });
 
       const nextRun = cron.next().toDate();
   

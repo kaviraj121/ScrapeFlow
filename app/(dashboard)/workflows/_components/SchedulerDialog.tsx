@@ -48,7 +48,7 @@ function SchedulerDialog({
     useEffect(() => {
       try {
         const cronString = cronstrue.toString(cron);
-        (parser as any).parseExpression(cron);
+        parser.parseExpression(cron);
         setValidCron(true);
         setReadableCron(cronString);
       } catch (error: any) {
