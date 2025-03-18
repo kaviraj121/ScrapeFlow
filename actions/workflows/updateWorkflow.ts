@@ -12,35 +12,35 @@ export async  function UpdateWorkflow({
     id:string;
     defination:string;
 }){
-    const {userId} =auth();
+    const { userId } = await auth();
 
-    if(!userId){
-        throw new Error("unathenticated");
-    }
+  if (!userId) {
+    throw new Error("Unauthenticated");
+  }
 
-    const workflow = await prisma.workFlow.findUnique({
-        where:{
-            id,
-            userId,
-        },
-    });
+  const workflow = await prisma.workFlow.findUnique({
+    where: {
+      id,
+      userId,
+    },
+  });
 
-        if(!workflow){ 
-            throw new Error ("workflow not found");
-        }
-    if(workflow.status !== WorkflowStatus.DRAFT){
-        throw new Error("workflow is not a draft");
-    }
-        await prisma.workFlow.update({
-            data:{
-                defination,
-            },
-            where:{
-                id,
-                userId,
-            },
-        });
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
 
-        revalidatePath("/workflows")
+  if (workflow.status !== WorkflowStatus.DRAFT) {
+    throw new Error("Workflow is not draft");
+  }
+
+  await prisma.workFlow.update({
+    data: {
+      defination,
+    },
+    where: {
+      id,
+      userId,
+    },
+  });
+  revalidatePath("/workflows");
 }
-

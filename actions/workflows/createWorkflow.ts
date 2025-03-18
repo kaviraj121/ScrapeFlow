@@ -12,32 +12,30 @@ import { redirect } from "next/navigation";
 
 export async function CreateWorkflow(form: createWorkflowSchemaType) {
   const { success, data } = createWorkflowSchema.safeParse(form);
+
   if (!success) {
     throw new Error("Invalid form data");
   }
 
-  const { userId } = auth();
+  const { userId } = await auth();
+
   if (!userId) {
     throw new Error("Unauthenticated");
   }
 
-  // ✅ FIXED: Properly initializing `initialFlow`
-  const initialFlow: { nodes: AppNode[]; edges: Edge[] } = {
+  const initWorkflow: { nodes: AppNode[]; edges: Edge[] } = {
     nodes: [],
     edges: [],
   };
-
-  initialFlow.nodes.push(CreateFlowNode(TaskType.LAUNCH_BROWSER));
-
+  initWorkflow.nodes.push(CreateFlowNode(TaskType.LAUNCH_BROWSER));
   const result = await prisma.workFlow.create({
     data: {
       userId,
       status: WorkflowStatus.DRAFT,
-      defination: JSON.stringify(initialFlow),
+      defination: JSON.stringify(initWorkflow),
       ...data,
     },
   });
-
   if (!result) {
     throw new Error("Failed to create workflow");
   }

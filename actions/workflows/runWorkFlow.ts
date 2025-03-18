@@ -16,90 +16,89 @@ export async function runWorkflow(form:{
     flowDefination?:string;
 }){
 
-    const {userId} = auth();
-    if(!userId){
-        throw new Error("unathenticted");
+    const { userId } = await auth();
+
+  if (!userId) {
+    throw new Error("Unauthenticated");
+  }
+
+  const { workflowId, flowDefination } = form;
+  if (!workflowId) {
+    throw new Error("workflowId is required");
+  }
+
+  const workflow = await prisma.workFlow.findUnique({
+    where: {
+      userId,
+      id: workflowId,
+    },
+  });
+
+  if (!workflow) {
+    throw new Error("Workflow not found");
+  }
+
+  let executionPlan: WorkflowExecutionPlan;
+  let workflowDefinition = flowDefination;
+
+  // Is the execution plan is published then the execution plan will set from workflow definition
+  if (workflow.status === WorkflowStatus.PUBLISHED) {
+    if (!workflow.executionPlan) {
+      throw new Error("No execution planned found in published workflow");
+    }
+    executionPlan = JSON.parse(workflow.executionPlan);
+    workflowDefinition = workflow.defination;
+  } else {
+    // Otherwise generating execution plan from flow-definition passed
+    if (!flowDefination) {
+      throw new Error("Flow definition is not defined");
     }
 
-    const {workflowId, flowDefination} = form;
-    if(!workflowId){
-        throw new Error("workflowId is required");
+    const flow = JSON.parse(flowDefination);
+    const result = FlowToExecutionPlan(flow.nodes, flow.edges);
+    if (result.error) {
+      throw new Error("Flow definition not valid");
     }
-
-    const workflow = await prisma.workFlow.findUnique({
-        where:{
-            userId,
-            id:workflowId,
-        }
-    });
-    if(!workflow){
-        throw new Error("workflow not found");
+    if (!result.executionPlan) {
+      throw new Error("No execution plan generated, Something went wrong");
     }
-
-    let executionPlan:WorkflowExecutionPlan;
-     let workflowDefinition = flowDefination;
-    if (workflow.status === WorkflowStatus.PUBLISHED) {
-        if(!workflow.executionPlan){
-            throw new Error("no execution plan found in published workflow");
-        }
-        executionPlan = JSON.parse(workflow.executionPlan);
-        workflowDefinition =workflow.defination;
-    }else{
-        if(!flowDefination){
-            throw new Error("flow defination is not defined")
-        }
-        const flow = JSON.parse(flowDefination);
-    const result = FlowToExecutionPlan(flow.nodes,flow.edges);
-    if(result.error){
-        throw new Error("flow defination not valid");
-    }
-
-    if(!result.executionPlan){
-        throw new Error("no execution plan generated");
-    }
-
-
     executionPlan = result.executionPlan;
-    
+  }
 
-    }
-    
-    
+  const execution = await prisma.workflowExecution.create({
+    data: {
+      workflowId,
+      userId,
+      status: workFlowExecutionStatus.PENDING,
+      startedAt: new Date(),
+      trigger: WorkflowExecutionTrigger.MANUAL,
+      defination: workflowDefinition,
+      phases: {
+        create: executionPlan.flatMap((phase) =>
+          phase.nodes.flatMap((node) => {
+            return {
+              userId,
+              status: ExecutionPhaseStatus.CREATED,
+              number: phase.phase,
+              node: JSON.stringify(node),
+              name: TaskRegistry[node.data.type].label,
+            };
+          })
+        ),
+      },
+    },
+    select: {
+      id: true,
+      phases: true,
+    },
+  });
 
-    const execution = await prisma.workflowExecution.create({
-        data:{
-            workflowId,
-            userId,
-            status:workFlowExecutionStatus.PENDING,
-            startedAt:new Date(),
-            defination: workflowDefinition,
-            trigger:WorkflowExecutionTrigger.MANUAL,
-            phases:{
-                create:executionPlan.flatMap(phase =>{
-                    return phase.nodes.flatMap((node)=>{
-                        return {
-                            userId,
-                            status:ExecutionPhaseStatus.CREATED,
-                            number:phase.phase,
-                            node:JSON.stringify(node),
-                            name:TaskRegistry[node.data.type].label,
-                        }
-                    })
-                })
-            },
-        },
+  if (!execution) {
+    throw new Error("Workflow execution not created");
+  }
 
-        select: {
-            id:true,
-            phases:true,
-        },
-    });
+  // This will be a long running function, so just calling it and making it run in background
+  ExecuteWorkflow(execution.id);
 
-    if(!execution){
-        throw new Error("workflow execution not created");
-    }
-
-    ExecuteWorkflow(execution.id);
-
-    redirect(`/workflow/runs/${workflowId}/${execution.id}`);
+  redirect(`/workflow/runs/${workflowId}/${execution.id}`);
 }
