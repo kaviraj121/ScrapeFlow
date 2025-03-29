@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# ScrapFlow: Visual Web Scraper Builder
+  ## Overview
+  ScrapFlow is a full-stack SaaS application that allows users to build web scrapers visually using an intuitive workflow builder powered by AI. The application includes 
+  features such as a credential management system, workflow scheduling, and detailed execution logs.
 
-## Getting Started
+  ## Features
 
-First, run the development server:
+  * Visual Workflow Builder: Users can create, modify, and delete workflows using a drag-and-drop interface.
+  * AI-Powered Task Identification: Automatically identifies input fields and buttons on web pages for seamless data extraction.
+  * Execution Monitoring: View execution status, logs, and details for each workflow run.
+  * Credential Management: Securely store sensitive information with encryption.
+  * Billing System: Purchase credits, view consumption statistics, and download invoices.
+  * User Authentication: Integrated with Clerk for user management and authentication.
+  * Responsive Design: Optimized for both desktop and mobile devices.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+  ## Live Site
+  
+  You can try out ScrapFlow live at: [Live Site](https://scrapeflows.netlify.app/)
+  
+  ## Tech Stack
+  
+  * Frontend: Next.js, TypeScript, Tailwind CSS, React Query
+  * Backend: Prisma ORM with SQLite
+  * Authentication: Clerk
+  * Deployment: Vercel (or your preferred hosting service)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+  ## Getting Started
+  
+  ### Prerequisites
+  * Node.js (version 14 or higher)
+  * npm or yarn
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  ## Installation
+  
+  1. Clone the repository:
+         
+         1. git clone https://github.com/yourusername/scrapflow.git
+         2. cd scrapflow
+  2. Install dependencies:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+         npm install
 
-## Learn More
+  3. Set up environment variables:
 
-To learn more about Next.js, take a look at the following resources:
+     Create a .env.local file in the root directory and add your Clerk API keys and other necessary configurations.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  4. Initialize the database:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+         npx prisma migrate dev --name init
+  
+  5. Start the development server:
 
-## Deploy on Vercel
+         npm run dev
+  
+  6. Open your browser and navigate to http://localhost:3000.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  ## Usage
+  
+  * Creating a Workflow: Navigate to the workflows page and click on "Create Workflow". Use the visual builder to add tasks and configure them.
+  * Running a Workflow: After creating a workflow, you can execute it and monitor its progress on the execution detail page.
+  * Managing Credentials: Use the credentials page to securely store and manage sensitive information.
+  * Billing: Purchase credits and view your transaction history on the billing page.
